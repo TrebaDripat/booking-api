@@ -1,0 +1,58 @@
+{
+  "measuredAt": "2026-11-17T19:00:50.897Z",
+  "revision": "afea3e281eebcf6993ad514c62683e30f120c3db",
+  "workingTreeClean": true,
+  "node": "v24.22.1",
+  "postgres": "17.12 (Debian 17.12-1.pgdg12+1)",
+  "independentNodeProcesses": 2,
+  "distinctKeyRounds": [
+    {
+      "requests": 24,
+      "waitingProcesses": 2,
+      "statuses": {
+        "201": 1,
+        "409": 23
+      },
+      "activeRows": 1
+    },
+    {
+      "requests": 24,
+      "waitingProcesses": 2,
+      "statuses": {
+        "201": 1,
+        "409": 23
+      },
+      "activeRows": 1
+    },
+    {
+      "requests": 24,
+      "waitingProcesses": 2,
+      "statuses": {
+        "201": 1,
+        "409": 23
+      },
+      "activeRows": 1
+    }
+  ],
+  "sameKeyRound": {
+    "requests": 24,
+    "waitingProcesses": 2,
+    "statuses": {
+      "200": 23,
+      "201": 1
+    },
+    "distinctBookingIds": 1,
+    "storedRows": 1
+  },
+  "differentPayloadsOneKey": {
+    "requests": 24,
+    "waitingProcesses": 2,
+    "statuses": {
+      "200": 11,
+      "201": 1,
+      "409": 12
+    },
+    "storedRows": 1
+  },
+  "scope": "Synthetic local contention test. Each round released a row lock after both API processes were observed waiting in PostgreSQL."
+}
