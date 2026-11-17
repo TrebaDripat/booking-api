@@ -45,7 +45,7 @@ import {
 } from './contracts.js';
 import { Database } from './database.js';
 import { BookingError, normalizedWindow } from './domain.js';
-import { BookingMetrics } from './metrics.js';
+import { BookingMetrics, ObserveBookingRequests } from './metrics.js';
 
 @Catch()
 export class ApiErrors implements ExceptionFilter {
@@ -83,7 +83,7 @@ export class ApiErrors implements ExceptionFilter {
 @ApiTags('Bookings')
 @ApiBadRequestResponse({ type: ProblemDto, description: 'Invalid input' })
 @ApiServiceUnavailableResponse({ type: ProblemDto, description: 'Database unavailable' })
-@UseInterceptors(BookingMetrics)
+@UseInterceptors(ObserveBookingRequests)
 @Controller('v1')
 export class BookingController {
   constructor(private readonly bookings: Bookings) {}

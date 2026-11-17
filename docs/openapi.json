@@ -534,7 +534,8 @@
           "startsAt",
           "endsAt",
           "resourceId"
-        ]
+        ],
+        "additionalProperties": false
       },
       "BookingDto": {
         "type": "object",

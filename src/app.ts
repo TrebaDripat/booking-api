@@ -3,6 +3,7 @@ import { INestApplication, Module, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, OpenAPIObject, SwaggerModule } from '@nestjs/swagger';
 import { Bookings } from './bookings.js';
+import { CreateBookingDto } from './contracts.js';
 import { Database } from './database.js';
 import { ApiErrors, BookingController, OperationsController } from './http.js';
 import { BookingMetrics } from './metrics.js';
@@ -28,5 +29,10 @@ export function document(app: INestApplication): OpenAPIObject {
     )
     .setVersion('1.0.0')
     .build();
-  return SwaggerModule.createDocument(app, description);
+  const spec = SwaggerModule.createDocument(app, description);
+  const input = spec.components?.schemas?.[CreateBookingDto.name];
+  if (!input || '$ref' in input) throw new Error('Missing booking request schema');
+  // The global validation pipe rejects extra body properties.
+  input.additionalProperties = false;
+  return spec;
 }

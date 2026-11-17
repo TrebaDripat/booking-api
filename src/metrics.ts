@@ -4,7 +4,7 @@ import type { Response } from 'express';
 import type { Observable } from 'rxjs';
 
 @Injectable()
-export class BookingMetrics implements NestInterceptor {
+export class BookingMetrics {
   readonly registry = new Registry();
   private readonly requests = new Counter({
     name: 'booking_http_requests_total',
@@ -20,14 +20,21 @@ export class BookingMetrics implements NestInterceptor {
     registers: [this.registry],
   });
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
-    const operation = context.getHandler().name;
-    const response = context.switchToHttp().getResponse<Response>();
+  observe(operation: string, response: Response): void {
     const stop = this.duration.startTimer({ operation });
     response.once('finish', () => {
       this.requests.inc({ operation, status: String(response.statusCode) });
       stop();
     });
+  }
+}
+
+@Injectable()
+export class ObserveBookingRequests implements NestInterceptor {
+  constructor(private readonly metrics: BookingMetrics) {}
+
+  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
+    this.metrics.observe(context.getHandler().name, context.switchToHttp().getResponse<Response>());
     return next.handle();
   }
 }
