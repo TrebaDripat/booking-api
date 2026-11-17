@@ -1,0 +1,40 @@
+{
+  "name": "booking-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A concurrent room reservation API built with NestJS and PostgreSQL",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/main.js",
+    "migrate": "node dist/migrate.js",
+    "openapi": "node dist/openapi.js",
+    "test": "npm run build && node --test test/unit.test.mjs",
+    "test:integration": "node --test test/integration.test.mjs",
+    "format:check": "prettier --check src test scripts"
+  },
+  "dependencies": {
+    "@nestjs/common": "12.5.1",
+    "@nestjs/core": "12.5.1",
+    "@nestjs/platform-express": "12.5.1",
+    "@nestjs/swagger": "12.1.2",
+    "@prometheus-io/client": "0.16.1",
+    "class-transformer": "0.5.1",
+    "class-validator": "0.15.1",
+    "pg": "8.23.1",
+    "reflect-metadata": "0.2.2",
+    "rxjs": "7.8.2"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.6",
+    "@types/node": "24.19.2",
+    "@types/pg": "8.23.1",
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "prettier": "3.10.1",
+    "typescript": "5.9.3"
+  },
+  "type": "module"
+}
