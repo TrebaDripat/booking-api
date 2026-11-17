@@ -32,13 +32,16 @@ jobs:
       - run: npm run format:check
       - run: npm test
       - name: Verify the published OpenAPI document
-        run: node dist/openapi.js "$RUNNER_TEMP/openapi.json" && diff -u docs/openapi.json "$RUNNER_TEMP/openapi.json"
+        run: |
+          mkdir -p "$RUNNER_TEMP/booking-evidence"
+          node dist/openapi.js "$RUNNER_TEMP/booking-evidence/openapi.json"
+          diff -u docs/openapi.json "$RUNNER_TEMP/booking-evidence/openapi.json"
       - name: Exercise two processes against the same PostgreSQL database
-        run: BOOKING_REPORT="$RUNNER_TEMP/booking-races.json" npm run test:integration
+        run: BOOKING_REPORT="$RUNNER_TEMP/booking-evidence/booking-races.json" npm run test:integration
       - uses: actions/upload-artifact@v4
         with:
           name: booking-races
-          path: ${{ runner.temp }}/booking-races.json
+          path: ${{ runner.temp }}/booking-evidence/
           if-no-files-found: error
   compose-restart:
     runs-on: ubuntu-24.04

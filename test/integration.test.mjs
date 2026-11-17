@@ -6,6 +6,7 @@ import { test } from 'node:test';
 import { promisify } from 'node:util';
 import { Pool } from 'pg';
 import { contractClient, race, startNode, stopNode } from './cluster.mjs';
+import { measureSingleSlot } from './single-slot.mjs';
 
 const exec = promisify(execFile);
 const createPath = '/v1/bookings';
@@ -18,7 +19,7 @@ test('PostgreSQL booking contract across two independent NestJS processes', { ti
   assert.ok(dsn, 'Set TEST_DATABASE_URL to a disposable PostgreSQL database');
   const pool = new Pool({ connectionString: dsn, connectionTimeoutMillis: 4000 });
   const nodes = [];
-  const rooms = Array.from({ length: 5 }, () => randomUUID());
+  const rooms = Array.from({ length: 6 }, () => randomUUID());
   let insertedRooms = false;
   t.after(async () => {
     try {
@@ -73,6 +74,14 @@ test('PostgreSQL booking contract across two independent NestJS processes', { ti
     assert.equal(resources.status, 200);
     assert.ok(resources.data.some((room) => room.id === rooms[0]));
   });
+
+  let twoRequestRace;
+  await t.test(
+    'two NestJS processes contend for the same slot and PostgreSQL stores exactly one booking',
+    async () => {
+      twoRequestRace = await measureSingleSlot(pool, nodes, rooms[5], window, reserve);
+    },
+  );
 
   await t.test('distinct-key races and same-key retries persist exactly one winner per window', async () => {
     const burst = 24;
@@ -129,6 +138,7 @@ test('PostgreSQL booking contract across two independent NestJS processes', { ti
         node: process.version,
         postgres: (await pool.query('SHOW server_version')).rows[0].server_version,
         independentNodeProcesses: nodes.length,
+        twoRequestRace,
         distinctKeyRounds: rounds,
         sameKeyRound: {
           requests: burst,
