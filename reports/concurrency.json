@@ -1,0 +1,81 @@
+{
+  "measuredAt": "2026-11-17T19:05:22.899Z",
+  "revision": "fcd20b5e332282e6543168267e720965aa1840e5",
+  "workingTreeClean": true,
+  "node": "v24.22.1",
+  "postgres": "17.12 (Debian 17.12-1.pgdg12+1)",
+  "independentNodeProcesses": 2,
+  "twoRequestRace": {
+    "requests": 2,
+    "waitingProcesses": 2,
+    "statuses": [
+      409,
+      201
+    ],
+    "storedRows": 1,
+    "metrics": [
+      {
+        "instance": "api-a",
+        "httpStatus": 409,
+        "requestCounter": 1,
+        "durationObservations": 1
+      },
+      {
+        "instance": "api-b",
+        "httpStatus": 201,
+        "requestCounter": 1,
+        "durationObservations": 1
+      }
+    ]
+  },
+  "distinctKeyRounds": [
+    {
+      "requests": 24,
+      "waitingProcesses": 2,
+      "statuses": {
+        "201": 1,
+        "409": 23
+      },
+      "activeRows": 1
+    },
+    {
+      "requests": 24,
+      "waitingProcesses": 2,
+      "statuses": {
+        "201": 1,
+        "409": 23
+      },
+      "activeRows": 1
+    },
+    {
+      "requests": 24,
+      "waitingProcesses": 2,
+      "statuses": {
+        "201": 1,
+        "409": 23
+      },
+      "activeRows": 1
+    }
+  ],
+  "sameKeyRound": {
+    "requests": 24,
+    "waitingProcesses": 2,
+    "statuses": {
+      "200": 23,
+      "201": 1
+    },
+    "distinctBookingIds": 1,
+    "storedRows": 1
+  },
+  "differentPayloadsOneKey": {
+    "requests": 24,
+    "waitingProcesses": 2,
+    "statuses": {
+      "200": 11,
+      "201": 1,
+      "409": 12
+    },
+    "storedRows": 1
+  },
+  "scope": "Synthetic local contention test. Each round released a row lock after both API processes were observed waiting in PostgreSQL."
+}

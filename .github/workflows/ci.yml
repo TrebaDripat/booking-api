@@ -1,0 +1,54 @@
+name: Booking API verification
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  postgres-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17-bookworm@sha256:40865bc877a289da75963d97d72b59633f639fc5af7a4e856bfa3714cae5b536
+        env:
+          POSTGRES_USER: booking
+          POSTGRES_PASSWORD: booking-demo-ci
+          POSTGRES_DB: booking_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U booking -d booking_test"
+          --health-interval 2s --health-timeout 3s --health-retries 20
+    env:
+      TEST_DATABASE_URL: postgresql://booking:booking-demo-ci@127.0.0.1:5432/booking_test
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24.22.1
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm test
+      - name: Verify the published OpenAPI document
+        run: |
+          mkdir -p "$RUNNER_TEMP/booking-evidence"
+          node dist/openapi.js "$RUNNER_TEMP/booking-evidence/openapi.json"
+          diff -u docs/openapi.json "$RUNNER_TEMP/booking-evidence/openapi.json"
+      - name: Exercise two processes against the same PostgreSQL database
+        run: BOOKING_REPORT="$RUNNER_TEMP/booking-evidence/booking-races.json" npm run test:integration
+      - uses: actions/upload-artifact@v4
+        with:
+          name: booking-races
+          path: ${{ runner.temp }}/booking-evidence/
+          if-no-files-found: error
+  compose-restart:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24.22.1
+      - run: node scripts/compose-smoke.mjs

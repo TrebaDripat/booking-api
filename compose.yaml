@@ -1,0 +1,49 @@
+x-application: &application
+  image: ${BOOKING_IMAGE:-booking-api:local}
+  pull_policy: never
+  read_only: true
+  security_opt: ["no-new-privileges:true"]
+  environment:
+    DATABASE_URL: postgresql://booking:booking-demo-local@db:5432/booking
+
+x-api: &api
+  <<: *application
+  depends_on:
+    migrate:
+      condition: service_completed_successfully
+  healthcheck:
+    test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+    interval: 3s
+    timeout: 3s
+    retries: 25
+
+services:
+  db:
+    image: postgres:17-bookworm@sha256:40865bc877a289da75963d97d72b59633f639fc5af7a4e856bfa3714cae5b536
+    environment:
+      POSTGRES_USER: booking
+      POSTGRES_PASSWORD: booking-demo-local
+      POSTGRES_DB: booking
+    volumes:
+      - database-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "booking", "-d", "booking"]
+      interval: 2s
+      timeout: 3s
+      retries: 25
+  migrate:
+    <<: *application
+    build: .
+    command: ["node", "dist/migrate.js"]
+    depends_on:
+      db:
+        condition: service_healthy
+  api-a:
+    <<: *api
+    ports: ["127.0.0.1:${BOOKING_PORT_A:-3000}:3000"]
+  api-b:
+    <<: *api
+    ports: ["127.0.0.1:${BOOKING_PORT_B:-3001}:3000"]
+
+volumes:
+  database-data:
