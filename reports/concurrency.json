@@ -1,10 +1,33 @@
 {
-  "measuredAt": "2026-11-17T19:00:50.897Z",
-  "revision": "afea3e281eebcf6993ad514c62683e30f120c3db",
+  "measuredAt": "2026-11-17T19:05:22.899Z",
+  "revision": "fcd20b5e332282e6543168267e720965aa1840e5",
   "workingTreeClean": true,
   "node": "v24.22.1",
   "postgres": "17.12 (Debian 17.12-1.pgdg12+1)",
   "independentNodeProcesses": 2,
+  "twoRequestRace": {
+    "requests": 2,
+    "waitingProcesses": 2,
+    "statuses": [
+      409,
+      201
+    ],
+    "storedRows": 1,
+    "metrics": [
+      {
+        "instance": "api-a",
+        "httpStatus": 409,
+        "requestCounter": 1,
+        "durationObservations": 1
+      },
+      {
+        "instance": "api-b",
+        "httpStatus": 201,
+        "requestCounter": 1,
+        "durationObservations": 1
+      }
+    ]
+  },
   "distinctKeyRounds": [
     {
       "requests": 24,

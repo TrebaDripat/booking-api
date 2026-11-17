@@ -44,15 +44,22 @@ Browse the full request and response schemas in the [committed OpenAPI document]
 
 ## Verification
 
+One request from each NestJS process targeted the same empty slot with different idempotency keys. PostgreSQL observed both processes waiting before the test released the room lock. One client received `201 Created`, the other received `409 slot_unavailable`, and the test found exactly one row for the room. Its booking ID and request key matched the winner. Each process's Prometheus counter recorded its own HTTP outcome. [CI run](https://github.com/TrebaDripat/booking-api/actions/runs/44154690877) · [Measured results](reports/concurrency.json) · [Prometheus A](reports/booking-races-api-a.prom) · [Prometheus B](reports/booking-races-api-b.prom)
+
 In three rounds of 24 requests for one slot, each round produced one `201`, 23 conflicts and one active database row. With a shared key, all 24 responses carried the same booking ID. Every round started with both API processes observed waiting for a lock in PostgreSQL. [Recorded results](reports/concurrency.json) · [Design and test procedure](docs/concurrency.md)
 
-Run the unit tests with Node.js 24. To run the integration suite, point it at a dedicated PostgreSQL 17 test database whose role can install `btree_gist`. The suite applies the migration and creates temporary test rooms.
+To reproduce the checks with Node.js 24 and Docker, run the following from the repository root in a POSIX shell. The disposable database is separate from the Compose demo. The suite applies the migration, creates temporary rooms and writes the report and both Prometheus exports to `/tmp`.
 
 ```sh
+docker run --detach --rm --name booking-race-db -p 127.0.0.1:55432:5432 \
+  -e POSTGRES_USER=booking -e POSTGRES_PASSWORD=booking-demo-local -e POSTGRES_DB=booking_test \
+  postgres:17-bookworm
 npm ci
 npm test
-TEST_DATABASE_URL='postgresql://booking:booking-demo-local@127.0.0.1:5432/booking_test' \
+docker exec booking-race-db pg_isready -h 127.0.0.1 -U booking -d booking_test
+TEST_DATABASE_URL='postgresql://booking:booking-demo-local@127.0.0.1:55432/booking_test' \
   BOOKING_REPORT=/tmp/booking-races.json npm run test:integration
+docker stop booking-race-db
 ```
 
 With Docker available, `node scripts/compose-smoke.mjs` starts its own isolated Compose project and verifies that bookings and idempotency keys survive container recreation. GitHub Actions runs both suites and checks that the published OpenAPI document matches the API. [CI runs](https://github.com/TrebaDripat/booking-api/actions/workflows/ci.yml)

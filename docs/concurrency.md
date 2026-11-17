@@ -17,10 +17,13 @@ The fixture launches two Node.js processes with distinct PostgreSQL application 
 
 | Requests per round | Rounds | HTTP outcomes in each round | Database result |
 | --- | ---: | --- | --- |
+| 2 distinct keys, one request per API process | 1 | 1 created, 1 slot conflict | Exactly 1 row in the test room, with the winner's ID and key |
 | 24 distinct keys, one room and interval | 3 | 1 created, 23 slot conflicts | 1 active booking |
 | 24 requests with one key and one payload | 1 | 1 created, 23 replays with the same ID | 1 booking for the key |
 | 24 requests with one key and two different payloads, 12 of each | 1 | 1 created, 11 replays, 12 key conflicts | 1 booking for the key |
 
-These five rounds measure correctness under forced contention. The recorded run identifies its Git revision, Node.js version and PostgreSQL version. [Raw JSON](../reports/concurrency.json) · [Test fixture](../test/cluster.mjs) · [Assertions](../test/integration.test.mjs)
+These six rounds measure correctness under forced contention. The two-request case runs before any other reservation traffic. Immediately after both responses, the test scrapes each process and checks its `booking_http_requests_total` counter against the response it sent. Each `reserve` histogram contains one observation, including time spent waiting at the test barrier. [Two-request assertions](../test/single-slot.mjs) · [Test fixture](../test/cluster.mjs) · [Burst and retry assertions](../test/integration.test.mjs)
+
+The saved report and both Prometheus exports come from the `booking-races` artifact of GitHub Actions run 44154690877. Its JSON records the tested PR merge revision and the Node.js and PostgreSQL versions. CI regenerates the OpenAPI document and compares it with the committed copy on each run. [CI run](https://github.com/TrebaDripat/booking-api/actions/runs/44154690877) · [JSON report](../reports/concurrency.json) · [Instance A metrics](../reports/booking-races-api-a.prom) · [Instance B metrics](../reports/booking-races-api-b.prom) · [OpenAPI](openapi.json)
 
 The integration suite also checks back-to-back intervals, cancellation, simultaneous migrations and a conflicting direct SQL insert. A separate Compose test stops and removes both API containers and the database container, recreates them with the same named volume and repeats the original request. [Container recreation test](../scripts/compose-smoke.mjs)
